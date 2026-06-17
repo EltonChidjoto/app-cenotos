@@ -8,7 +8,7 @@ $kernel->bootstrap();
 
 use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Artisan;
 
 $tenantId = 'empresa_demo';
 $email = 'demo@empresa.com';
@@ -17,38 +17,63 @@ $name = 'Demo Usuario';
 $tenantName = 'Empresa Demo';
 $tenantSlug = 'empresa_demo';
 
+echo "--- Current tenants and users ---\n";
+foreach (Tenant::query()->get() as $row) {
+    echo "tenant: id={$row->id} name={$row->name} slug={$row->slug} active={$row->active} data=" . json_encode($row->data) . PHP_EOL;
+}
+foreach (User::query()->get() as $row) {
+    echo "user: id={$row->id} email={$row->email} tenant_id={$row->tenant_id}" . PHP_EOL;
+}
+
 $tenant = Tenant::query()->firstOrCreate(
     ['id' => $tenantId],
     [
         'name' => $tenantName,
         'slug' => $tenantSlug,
         'active' => true,
+        'data' => ['created_by' => 'copilot'],
     ]
 );
 
-$user = User::query()->firstOrCreate(
+echo $tenant->wasRecentlyCreated
+    ? "Inserted tenant {$tenantId}.\n"
+    : "Tenant {$tenantId} already exists.\n";
+
+$databaseName = $tenant->database()->getName();
+$databaseManager = $tenant->database()->manager();
+
+if (! $databaseManager->databaseExists($databaseName)) {
+    $tenant->database()->makeCredentials();
+    $databaseManager->createDatabase($tenant);
+
+    Artisan::call('tenants:migrate', [
+        '--tenants' => [$tenant->getTenantKey()],
+    ]);
+
+    Artisan::call('tenants:seed', [
+        '--tenants' => [$tenant->getTenantKey()],
+    ]);
+
+    echo "Provisioned tenant database {$databaseName}.\n";
+} else {
+    echo "Tenant database {$databaseName} already exists.\n";
+}
+
+$user = User::query()->updateOrCreate(
     ['email' => $email],
     [
         'name' => $name,
-        'password' => Hash::make($password),
-        'tenant_id' => $tenant->getKey(),
+        'password' => $password,
+        'tenant_id' => $tenantId,
     ]
 );
 
-if ($user->wasRecentlyCreated) {
-    echo "Created tenant and user.\n";
-} else {
-    echo "User already exists.\n";
-    if ($user->tenant_id !== $tenant->getKey()) {
-        $user->tenant_id = $tenant->getKey();
-        $user->save();
-        echo "Assigned existing user to tenant.\n";
-    }
-}
+echo $user->wasRecentlyCreated
+    ? "Inserted user {$email}.\n"
+    : "Updated existing user {$email}.\n";
 
-echo "Tenant ID: {$tenant->getKey()}\n";
-echo "Tenant name: {$tenant->name}\n";
-echo "User email: {$user->email}\n";
-echo "User password: {$password}\n";
-
-echo "Login credentials ready for http://127.0.0.1:8000/login\n";
+echo "\nCredentials:\n";
+echo "Email: {$email}\n";
+echo "Password: {$password}\n";
+echo "Tenant slug: {$tenantSlug}\n";
+echo "Login URL: http://127.0.0.1:8000/login\n";

@@ -34,7 +34,9 @@ return [
         Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper::class,
         Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper::class,
         Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\RedisTenancyBootstrapper::class,
+        // RedisTenancyBootstrapper requires the PHP "redis" extension (phpredis).
+        // Keep it disabled when using predis so tenancy still works without ext-redis.
+        // Stancl\Tenancy\Bootstrappers\RedisTenancyBootstrapper::class,
     ],
 
     /**
