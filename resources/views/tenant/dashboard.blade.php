@@ -49,6 +49,7 @@
             background: rgba(255,255,255,.04);
         }
         form { margin: 0; }
+        .pagination { margin-top: 1rem; }
         @media (max-width: 800px) {
             .hero, .topline { flex-direction: column; align-items: start; }
             .stats { grid-template-columns: 1fr; }
@@ -79,8 +80,8 @@
                 <strong>{{ number_format($salesAmount, 2, ',', '.') }}</strong>
             </div>
             <div class="stat">
-                <span class="muted">DB</span>
-                <strong>{{ $tenant->getTenantKey() }}</strong>
+                <span class="muted">Cache</span>
+                <strong>{{ $cacheInfo['store'] }}</strong>
             </div>
         </section>
 
@@ -88,7 +89,11 @@
             <div class="topline">
                 <div>
                     <h2 style="margin:0;">Últimas vendas</h2>
-                    <p class="muted" style="margin:.25rem 0 0;">Dados lidos diretamente da base da empresa ativa.</p>
+                    <p class="muted" style="margin:.25rem 0 0;">Dados cacheados por tenant e por página. A primeira leitura vem do MySQL; as seguintes, do Redis.</p>
+                </div>
+                <div>
+                    <span class="badge">page {{ $cacheInfo['page'] }}</span>
+                    <span class="badge">key {{ $cacheInfo['key'] }}</span>
                 </div>
             </div>
 
@@ -116,6 +121,10 @@
                     @endforelse
                 </tbody>
             </table>
+
+            <div class="pagination">
+                {{ $sales->links() }}
+            </div>
         </section>
     </div>
 </body>
