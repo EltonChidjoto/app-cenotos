@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Services\TenantService;
+use App\Support\FallbackSessionHandler;
+use Illuminate\Session\CacheBasedSessionHandler;
+use Illuminate\Session\FileSessionHandler;
+use Illuminate\Session\SessionManager;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(TenantService::class);
     }
 
     /**
@@ -19,6 +24,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        $this->app->resolving('session', function (SessionManager $manager): void {
+            $manager->extend('redis', function ($app): FallbackSessionHandler {
+                $config = $app['config']->get('session');
+                $cache = clone $app->make('cache')->store($config['store'] ?: 'redis');
+
+                if ($config['connection']) {
+                    $cache->getStore()->setConnection($config['connection']);
+                }
+
+                return new FallbackSessionHandler(
+                    new CacheBasedSessionHandler($cache, $config['lifetime']),
+                    new FileSessionHandler($app->make('files'), $config['files'], $config['lifetime']),
+                );
+            });
+        });
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Services\TenantSalesCache;
+use App\Services\TenantService;
 use Illuminate\Database\Eloquent\Model;
 use Stancl\Tenancy\Database\Concerns\TenantConnection;
 
@@ -35,7 +35,7 @@ class Sale extends Model
                 return;
             }
 
-            app(TenantSalesCache::class)->forget(tenancy()->tenant);
+            app(TenantService::class)->forgetCache('sales', tenancy()->tenant);
         };
 
         static::saved($flushTenantCache);

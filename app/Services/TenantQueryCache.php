@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Sale;
 use App\Models\Tenant;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -24,6 +23,7 @@ class TenantQueryCache
     public function paginate(
         Tenant $tenant,
         string $domain,
+        string $modelClass,
         Closure $queryFactory,
         array $filters = [],
         int $perPage = 10,
@@ -32,35 +32,44 @@ class TenantQueryCache
         $normalizedFilters = $this->normalizeFilters($filters);
         unset($normalizedFilters['page']);
 
-        $cache = $this->cacheStore();
-        $scopedCache = $this->supportsTags($cache) ? $cache->tags($this->cacheTags($tenant, $domain)) : $cache;
-        $cacheKey = $this->cacheKey($tenant, $domain, $page, $perPage, $normalizedFilters);
+        if (config('cache.default') !== 'redis') {
+            return $this->paginateWithoutCache($queryFactory, $filters, $perPage, $page);
+        }
 
-        $payload = $scopedCache->remember($cacheKey, now()->addMinutes(10), function () use ($queryFactory, $page, $perPage, $filters): array {
-            $paginator = $queryFactory()
-                ->paginate($perPage, ['*'], 'page', $page)
-                ->appends($filters);
+        try {
+            $cache = $this->cacheStore();
+            $scopedCache = $this->supportsTags($cache) ? $cache->tags($this->cacheTags($tenant, $domain)) : $cache;
+            $cacheKey = $this->cacheKey($tenant, $domain, $page, $perPage, $normalizedFilters);
 
-            return [
-                'items' => $paginator->getCollection()->toArray(),
-                'total' => $paginator->total(),
-                'per_page' => $paginator->perPage(),
-                'current_page' => $paginator->currentPage(),
-                'path' => $paginator->path(),
-            ];
-        });
+            $payload = $scopedCache->remember($cacheKey, now()->addMinutes(10), function () use ($queryFactory, $page, $perPage, $filters): array {
+                $paginator = $queryFactory()
+                    ->paginate($perPage, ['*'], 'page', $page)
+                    ->appends($filters);
 
-        return new Paginator(
-            Sale::hydrate($payload['items']),
-            $payload['total'],
-            $payload['per_page'],
-            $payload['current_page'],
-            [
-                'path' => $payload['path'],
-                'pageName' => 'page',
-                'query' => $filters,
-            ]
-        );
+                return [
+                    'items' => $paginator->getCollection()->toArray(),
+                    'total' => $paginator->total(),
+                    'per_page' => $paginator->perPage(),
+                    'current_page' => $paginator->currentPage(),
+                    'path' => $paginator->path(),
+                ];
+            });
+
+            return new Paginator(
+                $modelClass::hydrate($payload['items']),
+                $payload['total'],
+                $payload['per_page'],
+                $payload['current_page'],
+                [
+                    'path' => $payload['path'],
+                    'pageName' => 'page',
+                    'query' => $filters,
+                ]
+            );
+        } catch (\Throwable) {
+            // Redis is optional: if it is unavailable, query the tenant database directly.
+            return $this->paginateWithoutCache($queryFactory, $filters, $perPage, $page);
+        }
     }
 
     public function meta(Tenant $tenant, string $domain, array $filters = [], int $perPage = 10): array
@@ -81,11 +90,30 @@ class TenantQueryCache
 
     public function forget(Tenant $tenant, string $domain): void
     {
-        $cache = $this->cacheStore();
-
-        if ($this->supportsTags($cache)) {
-            $cache->tags($this->cacheTags($tenant, $domain))->flush();
+        if (config('cache.default') !== 'redis') {
+            return;
         }
+
+        try {
+            $cache = $this->cacheStore();
+
+            if ($this->supportsTags($cache)) {
+                $cache->tags($this->cacheTags($tenant, $domain))->flush();
+            }
+        } catch (\Throwable) {
+            // Cache invalidation must not prevent the model operation from completing.
+        }
+    }
+
+    private function paginateWithoutCache(
+        Closure $queryFactory,
+        array $filters,
+        int $perPage,
+        int $page,
+    ): LengthAwarePaginator {
+        return $queryFactory()
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->appends($filters);
     }
 
     private function cacheStore(): CacheRepository
@@ -96,7 +124,7 @@ class TenantQueryCache
     private function cacheKey(Tenant $tenant, string $domain, int $page, int $perPage, array $filters): string
     {
         return sprintf(
-            'tenant:%s:%s:page:%d:per:%d:filters:%s',
+            '%s:%s:page:%d:per:%d:filters:%s',
             $tenant->getTenantKey(),
             $domain,
             $page,
@@ -108,7 +136,7 @@ class TenantQueryCache
     private function cacheTags(Tenant $tenant, string $domain): array
     {
         return [
-            'tenant:' . $tenant->getTenantKey(),
+            $tenant->getTenantKey(),
             $domain,
         ];
     }
