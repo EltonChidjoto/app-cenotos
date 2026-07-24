@@ -33,7 +33,7 @@ return [
     'connections' => [
 
         'central' => [
-            'driver' => 'mysql',
+            'driver' => env('CENTRAL_DB_DRIVER', 'mysql'),
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
@@ -163,7 +163,7 @@ return [
     |
     */
 
-        'redis' => [
+    'redis' => [
 
         'client' => env('REDIS_CLIENT', 'predis'),
 

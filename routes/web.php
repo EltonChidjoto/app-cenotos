@@ -1,10 +1,10 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 Route::get('/', function (): RedirectResponse {
@@ -15,7 +15,9 @@ Route::get('/', function (): RedirectResponse {
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
-    Route::post('/login', [AuthController::class, 'store'])->name('login.store');
+    Route::post('/login', [AuthController::class, 'store'])
+        ->middleware('throttle:login')
+        ->name('login.store');
 });
 
 Route::post('/logout', [AuthController::class, 'destroy'])
@@ -38,7 +40,7 @@ Route::get('/debug/r2', function (): JsonResponse {
             'written' => $written,
             'exists' => Storage::disk('s3')->exists($path),
         ]);
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         return response()->json([
             'ok' => false,
             'disk' => 's3',

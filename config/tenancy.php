@@ -3,11 +3,25 @@
 declare(strict_types=1);
 
 use App\Models\Tenant;
+use App\Support\CompanyTenantIdGenerator;
+use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper;
 use Stancl\Tenancy\Database\Models\Domain;
+use Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager;
+use Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager;
+use Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager;
 
 return [
     'tenant_model' => Tenant::class,
-    'id_generator' => App\Support\CompanyTenantIdGenerator::class,
+    'id_generator' => CompanyTenantIdGenerator::class,
+
+    // Demo data is enabled automatically outside production. In production,
+    // enable it explicitly and provide a password through the environment.
+    'seed_demo_data' => env('SEED_DEMO_DATA', false),
+    'demo_user_password' => env('DEMO_USER_PASSWORD'),
+    'lock_store' => env('TENANCY_LOCK_STORE', 'file'),
 
     'domain_model' => Domain::class,
 
@@ -30,10 +44,10 @@ return [
      * To configure their behavior, see the config keys below.
      */
     'bootstrappers' => [
-        Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper::class,
+        DatabaseTenancyBootstrapper::class,
+        CacheTenancyBootstrapper::class,
+        FilesystemTenancyBootstrapper::class,
+        QueueTenancyBootstrapper::class,
         // RedisTenancyBootstrapper requires the PHP "redis" extension (phpredis).
         // Keep it disabled when using predis so tenancy still works without ext-redis.
         // Stancl\Tenancy\Bootstrappers\RedisTenancyBootstrapper::class,
@@ -62,10 +76,10 @@ return [
          * TenantDatabaseManagers are classes that handle the creation & deletion of tenant databases.
          */
         'managers' => [
-            'sqlite' => Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager::class,
-            'mysql' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
-            'mariadb' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
-            'pgsql' => Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager::class,
+            'sqlite' => SQLiteDatabaseManager::class,
+            'mysql' => MySQLDatabaseManager::class,
+            'mariadb' => MySQLDatabaseManager::class,
+            'pgsql' => PostgreSQLDatabaseManager::class,
 
         /**
          * Use this database manager for MySQL to have a DB user created for each tenant database.

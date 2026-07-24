@@ -28,13 +28,18 @@ class CompanyTenantIdGenerator implements UniqueIdentifierGenerator
                 ->lower()
                 ->replaceMatches('/[^a-z0-9]+/', '_')
                 ->trim('_')
+                ->substr(0, 48)
                 ->toString();
 
             if ($identifier !== '') {
-                return $identifier;
+                if (! $resource->newQuery()->whereKey($identifier)->exists()) {
+                    return $identifier;
+                }
+
+                return $identifier.'_'.Str::lower(Str::random(6));
             }
         }
 
-        return 'empresa_' . Str::lower(Str::random(8));
+        return 'empresa_'.Str::lower(Str::random(8));
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use RuntimeException;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,6 +17,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->environment('production') && ! config('tenancy.seed_demo_data')) {
+            $this->command?->warn('Demo seed ignorado em produção. Defina SEED_DEMO_DATA=true para o ativar explicitamente.');
+
+            return;
+        }
+
+        $password = config('tenancy.demo_user_password') ?: 'password';
+
+        if (app()->environment('production') && strlen($password) < 12) {
+            throw new RuntimeException('DEMO_USER_PASSWORD deve ter pelo menos 12 caracteres em produção.');
+        }
+
         $tenants = [
             'empresa_demo' => 'Empresa demo 1',
             'empresa_demo_2' => 'Empresa demo 2',
@@ -37,13 +50,13 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Test User',
                 'username' => 'testuser',
                 'email' => 'test@example.com',
-                'tenant_id' => 'empresa_1',
+                'tenant_id' => 'empresa_demo',
             ],
             [
                 'name' => 'Empresa 2 User',
                 'username' => 'empresa2user',
                 'email' => 'empresa2@example.com',
-                'tenant_id' => 'empresa_2',
+                'tenant_id' => 'empresa_demo_2',
             ],
         ];
 
@@ -52,7 +65,7 @@ class DatabaseSeeder extends Seeder
                 ['email' => $user['email']],
                 [
                     ...$user,
-                    'password' => 'password',
+                    'password' => $password,
                 ]
             );
         }

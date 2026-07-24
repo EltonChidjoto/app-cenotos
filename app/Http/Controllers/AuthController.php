@@ -32,7 +32,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         $user = $request->user();
-        if (! $user?->tenant_id) {
+        if (! $user?->tenant_id || ! $user->tenant?->active) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -41,8 +41,6 @@ class AuthController extends Controller
                 'username' => 'Este utilizador ainda não está associado a uma empresa.',
             ]);
         }
-
-        $request->session()->put('tenant_id', $user->tenant_id);
 
         return redirect()->intended(route('dashboard'));
     }

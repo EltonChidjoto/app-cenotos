@@ -6,25 +6,11 @@ namespace Database\Seeders;
 
 use App\Models\Sale;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 class TenantDatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        if (! Schema::hasTable('sales')) {
-            Schema::create('sales', function (Blueprint $table): void {
-                $table->id();
-                $table->string('reference')->unique();
-                $table->string('customer_name');
-                $table->decimal('amount', 12, 2);
-                $table->string('status')->default('paid');
-                $table->timestamp('sold_at')->nullable();
-                $table->timestamps();
-            });
-        }
-
         $sales = [
             ['reference' => 'V-1001', 'customer_name' => 'Cliente Demo 1', 'amount' => 12500.00, 'status' => 'paid'],
             ['reference' => 'V-1002', 'customer_name' => 'Cliente Demo 2', 'amount' => 9800.50, 'status' => 'paid'],

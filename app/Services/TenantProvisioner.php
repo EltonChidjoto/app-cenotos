@@ -6,11 +6,21 @@ namespace App\Services;
 
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use RuntimeException;
 
 class TenantProvisioner
 {
     public function provision(Tenant $tenant, bool $seed = false): void
+    {
+        Cache::store(config('tenancy.lock_store', 'file'))
+            ->lock('tenant-provision:'.$tenant->getTenantKey(), 300)
+            ->block(30, function () use ($tenant, $seed): void {
+                $this->provisionWithoutLock($tenant, $seed);
+            });
+    }
+
+    private function provisionWithoutLock(Tenant $tenant, bool $seed): void
     {
         $manager = $tenant->database()->manager();
         $databaseName = $tenant->database()->getName();
@@ -39,7 +49,7 @@ class TenantProvisioner
 
         if ($exitCode !== 0) {
             throw new RuntimeException(
-                "O comando {$command} falhou para o tenant [{$tenant->getTenantKey()}].\n" . Artisan::output()
+                "O comando {$command} falhou para o tenant [{$tenant->getTenantKey()}].\n".Artisan::output()
             );
         }
     }

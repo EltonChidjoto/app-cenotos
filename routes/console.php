@@ -4,15 +4,12 @@ use App\Models\Tenant;
 use App\Services\TenantProvisioner;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-use Throwable;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Artisan::command('tenant:provision {tenantId : ID do tenant} {--seed : Também inserir dados demo}', function (
-    TenantProvisioner $provisioner,
-): int {
+Artisan::command('tenant:provision {tenantId : ID do tenant} {--seed : Também inserir dados demo}', function (TenantProvisioner $provisioner): int {
     $tenant = Tenant::query()->find($this->argument('tenantId'));
 
     if ($tenant === null) {
