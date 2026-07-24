@@ -5,7 +5,7 @@ namespace App\Providers;
 use App\Services\TenantService;
 use App\Support\FallbackSessionHandler;
 use Illuminate\Session\CacheBasedSessionHandler;
-use Illuminate\Session\FileSessionHandler;
+use Illuminate\Session\DatabaseSessionHandler;
 use Illuminate\Session\SessionManager;
 use Illuminate\Support\ServiceProvider;
 
@@ -35,7 +35,12 @@ class AppServiceProvider extends ServiceProvider
 
                 return new FallbackSessionHandler(
                     new CacheBasedSessionHandler($cache, $config['lifetime']),
-                    new FileSessionHandler($app->make('files'), $config['files'], $config['lifetime']),
+                    new DatabaseSessionHandler(
+                        $app->make('db')->connection($config['connection']),
+                        $config['table'],
+                        $config['lifetime'],
+                        $app,
+                    ),
                 );
             });
         });

@@ -16,34 +16,45 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $empresa1 = Tenant::query()->firstOrCreate(
-            ['id' => 'empresa_1'],
+        $tenants = [
+            'empresa_demo' => 'Empresa demo 1',
+            'empresa_demo_2' => 'Empresa demo 2',
+        ];
+
+        foreach ($tenants as $tenantId => $name) {
+            Tenant::query()->updateOrCreate(
+                ['id' => $tenantId],
+                [
+                    'name' => $name,
+                    'slug' => $tenantId,
+                    'active' => true,
+                ]
+            );
+        }
+
+        $users = [
             [
-                'name' => 'Empresa 1',
-                'slug' => 'empresa_1',
-                'active' => true,
-            ]
-        );
-
-        $empresa2 = Tenant::query()->firstOrCreate(
-            ['id' => 'empresa_2'],
+                'name' => 'Test User',
+                'username' => 'testuser',
+                'email' => 'test@example.com',
+                'tenant_id' => 'empresa_1',
+            ],
             [
-                'name' => 'Empresa 2',
-                'slug' => 'empresa_2',
-                'active' => true,
-            ]
-        );
+                'name' => 'Empresa 2 User',
+                'username' => 'empresa2user',
+                'email' => 'empresa2@example.com',
+                'tenant_id' => 'empresa_2',
+            ],
+        ];
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'tenant_id' => $empresa1->getKey(),
-        ]);
-
-        User::factory()->create([
-            'name' => 'Empresa 2 User',
-            'email' => 'empresa2@example.com',
-            'tenant_id' => $empresa2->getKey(),
-        ]);
+        foreach ($users as $user) {
+            User::query()->updateOrCreate(
+                ['email' => $user['email']],
+                [
+                    ...$user,
+                    'password' => 'password',
+                ]
+            );
+        }
     }
 }

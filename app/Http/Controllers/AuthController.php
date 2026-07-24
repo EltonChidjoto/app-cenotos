@@ -19,14 +19,14 @@ class AuthController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'username' => ['required'],
             'password' => ['required', 'string'],
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()
-                ->withErrors(['email' => 'As credenciais não correspondem aos nossos registos.'])
-                ->onlyInput('email');
+                ->withErrors(['username' => 'As credenciais não correspondem aos nossos registos.'])
+                ->onlyInput('username');
         }
 
         $request->session()->regenerate();
@@ -38,7 +38,7 @@ class AuthController extends Controller
             $request->session()->regenerateToken();
 
             return back()->withErrors([
-                'email' => 'Este utilizador ainda não está associado a uma empresa.',
+                'username' => 'Este utilizador ainda não está associado a uma empresa.',
             ]);
         }
 
