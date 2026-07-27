@@ -11,16 +11,24 @@ use RuntimeException;
 
 class TenantProvisioner
 {
-    public function provision(Tenant $tenant, bool $seed = false): void
+    public function __construct(private readonly TenantModuleMigrator $moduleMigrator) {}
+
+    /**
+     * @param  array<int, string>  $modules
+     */
+    public function provision(Tenant $tenant, bool $seed = false, array $modules = []): void
     {
         Cache::store(config('tenancy.lock_store', 'file'))
             ->lock('tenant-provision:'.$tenant->getTenantKey(), 300)
-            ->block(30, function () use ($tenant, $seed): void {
-                $this->provisionWithoutLock($tenant, $seed);
+            ->block(30, function () use ($tenant, $seed, $modules): void {
+                $this->provisionWithoutLock($tenant, $seed, $modules);
             });
     }
 
-    private function provisionWithoutLock(Tenant $tenant, bool $seed): void
+    /**
+     * @param  array<int, string>  $modules
+     */
+    private function provisionWithoutLock(Tenant $tenant, bool $seed, array $modules): void
     {
         $manager = $tenant->database()->manager();
         $databaseName = $tenant->database()->getName();
@@ -34,6 +42,10 @@ class TenantProvisioner
         }
 
         $this->runTenantCommand('tenants:migrate', $tenant);
+
+        foreach (array_unique($modules) as $moduleCode) {
+            $this->moduleMigrator->migrate($tenant, $moduleCode);
+        }
 
         if ($seed) {
             $this->runTenantCommand('tenants:seed', $tenant);

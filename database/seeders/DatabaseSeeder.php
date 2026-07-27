@@ -51,23 +51,46 @@ class DatabaseSeeder extends Seeder
                 'username' => 'testuser',
                 'email' => 'test@example.com',
                 'tenant_id' => 'empresa_demo',
+                'tenant_ids' => ['empresa_demo'],
             ],
             [
                 'name' => 'Empresa 2 User',
                 'username' => 'empresa2user',
                 'email' => 'empresa2@example.com',
                 'tenant_id' => 'empresa_demo_2',
+                'tenant_ids' => ['empresa_demo_2'],
+            ],
+            [
+                'name' => 'Cenotos Admin',
+                'username' => 'admincenotos',
+                'email' => 'admin@cenotos.local',
+                'tenant_id' => 'empresa_demo',
+                'tenant_ids' => ['empresa_demo', 'empresa_demo_2'],
             ],
         ];
 
         foreach ($users as $user) {
-            User::query()->updateOrCreate(
+            $tenantIds = $user['tenant_ids'];
+            unset($user['tenant_ids']);
+
+            $userModel = User::query()->updateOrCreate(
                 ['email' => $user['email']],
                 [
                     ...$user,
                     'password' => $password,
                 ]
             );
+
+            $memberships = collect($tenantIds)
+                ->mapWithKeys(fn (string $tenantId): array => [
+                    $tenantId => [
+                        'is_default' => $tenantId === $user['tenant_id'],
+                        'active' => true,
+                    ],
+                ])
+                ->all();
+
+            $userModel->tenants()->syncWithoutDetaching($memberships);
         }
     }
 }

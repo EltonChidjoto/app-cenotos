@@ -23,6 +23,65 @@ return [
     'demo_user_password' => env('DEMO_USER_PASSWORD'),
     'lock_store' => env('TENANCY_LOCK_STORE', 'file'),
 
+    /*
+     * O provisionamento base executa apenas estas migrations. Módulos de
+     * negócio são instalados separadamente através de tenant:module-migrate.
+     */
+    'core_migration_paths' => [
+        database_path('migrations/tenant/core'),
+    ],
+
+    'module_migrations' => [
+        'hotels' => [
+            'version' => '1.0.0',
+            'dependencies' => ['hotels'],
+            'paths' => [
+                database_path('migrations/tenant/modules/hotels'),
+            ],
+        ],
+        'orders' => [
+            'version' => '1.0.0',
+            'dependencies' => ['orders'],
+            'paths' => [
+                database_path('migrations/tenant/modules/orders'),
+            ],
+        ],
+        'purchases' => [
+            'version' => '1.0.0',
+            'dependencies' => ['purchases'],
+            'paths' => [
+                database_path('migrations/tenant/modules/purchases'),
+            ],
+        ],
+        'references' => [
+            'version' => '1.0.0',
+            'paths' => [
+                database_path('migrations/tenant/modules/references'),
+            ],
+        ],        
+        'sales' => [
+            'version' => '1.0.0',
+            'dependencies' => ['references'],
+            'paths' => [
+                database_path('migrations/tenant/modules/sales'),
+            ],
+        ],
+        'stocks' => [
+            'version' => '1.0.0',
+            'dependencies' => ['stocks'],
+            'paths' => [
+                database_path('migrations/tenant/modules/stocks'),
+            ],
+        ],
+        'workshops' => [
+            'version' => '1.0.0',
+            'dependencies' => ['workshops'],
+            'paths' => [
+                database_path('migrations/tenant/modules/workshops'),
+            ],
+        ],
+    ],
+
     'domain_model' => Domain::class,
 
     /**
@@ -205,7 +264,7 @@ return [
      */
     'migration_parameters' => [
         '--force' => true, // This needs to be true to run migrations in production.
-        '--path' => [database_path('migrations/tenant')],
+        '--path' => [database_path('migrations/tenant/core')],
         '--realpath' => true,
     ],
 

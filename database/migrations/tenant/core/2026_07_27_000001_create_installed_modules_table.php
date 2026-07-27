@@ -10,19 +10,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('sales', function (Blueprint $table): void {
+        Schema::create('installed_modules', function (Blueprint $table): void {
             $table->id();
-            $table->string('reference')->unique();
-            $table->string('customer_name');
-            $table->decimal('amount', 12, 2);
-            $table->string('status')->default('paid');
-            $table->timestamp('sold_at')->nullable();
+            $table->string('code', 50)->unique();
+            $table->string('version', 30);
+            $table->string('status', 30)->default('active');
+            $table->timestamp('installed_at');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('sales');
+        Schema::dropIfExists('installed_modules');
     }
 };

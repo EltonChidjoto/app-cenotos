@@ -6,11 +6,18 @@ namespace Database\Seeders;
 
 use App\Models\Sale;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class TenantDatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        if (! Schema::hasTable('sales')) {
+            $this->command?->warn('Dados demo de vendas ignorados: o módulo sales ainda não está instalado.');
+
+            return;
+        }
+
         $sales = [
             ['reference' => 'V-1001', 'customer_name' => 'Cliente Demo 1', 'amount' => 12500.00, 'status' => 'paid'],
             ['reference' => 'V-1002', 'customer_name' => 'Cliente Demo 2', 'amount' => 9800.50, 'status' => 'paid'],

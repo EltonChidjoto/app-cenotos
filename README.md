@@ -23,6 +23,24 @@ php artisan boost:install
 ```bash
 php artisan tenant:provision empresa_demo --seed
 ```
+
+O provisionamento base cria apenas as tabelas Core. Para instalar Vendas
+exclusivamente numa empresa:
+
+```bash
+php artisan tenant:provision empresa_1 --module=sales
+```
+
+Se a base do tenant já existir:
+
+```bash
+php artisan tenant:module-migrate empresa_1 sales
+```
+
+As migrations administrativas ficam em `database/migrations`, as migrations
+Core do tenant em `database/migrations/tenant/core` e as migrations de Vendas
+em `database/migrations/tenant/modules/sales`.
+
 - Provisionamento protegido com lock para evitar duas migrations simultâneas.
 - Rate limiting no login: 5 tentativas por utilizador/IP e 30 por IP.
 - Seeder corrigido para não associar users a tenants inexistentes.
