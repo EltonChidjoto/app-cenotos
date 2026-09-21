@@ -11,8 +11,7 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request): Response
-    {
+    public function index(Request $request): Response {
         $tenant = $this->tenantService->requireCurrent();
         $page = max(1, min($request->integer('page', 1), 10000));
         $filters = ['page' => $page];
