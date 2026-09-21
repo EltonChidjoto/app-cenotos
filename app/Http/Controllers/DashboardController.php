@@ -6,11 +6,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $tenant = $this->tenantService->requireCurrent();
         $page = max(1, min($request->integer('page', 1), 10000));
@@ -25,8 +26,12 @@ class DashboardController extends Controller
             tenant: $tenant
         );
 
-        return view('tenant.dashboard', [
-            'tenant' => $tenant,
+        return Inertia::render('Tenant/Dashboard', [
+            'tenant' => [
+                'id' => $tenant->getTenantKey(),
+                'name' => $tenant->displayName(),
+                'databaseName' => $tenant->getInternal('db_name'),
+            ],
             'sales' => $sales,
             'salesTotal' => $sales->total(),
             'salesAmount' => (float) $sales->sum('amount'),

@@ -2,32 +2,24 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\AuthRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class AuthController extends Controller
 {
-    public function create(): View
-    {
-        return view('auth.login');
+    public function index(): Response {
+        return Inertia::render('Auth/Login');
     }
 
-    public function store(Request $request): RedirectResponse
-    {
-        $credentials = $request->validate([
-            'username' => ['required'],
-            'password' => ['required', 'string'],
-        ]);
-
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()
-                ->withErrors(['username' => 'As credenciais não correspondem aos nossos registos.'])
-                ->onlyInput('username');
-        }
+    public function authenticate(AuthRequest $request): RedirectResponse {
+        $request->authenticate();
 
         $request->session()->regenerate();
 
@@ -45,8 +37,7 @@ class AuthController extends Controller
         return redirect()->intended(route('dashboard'));
     }
 
-    public function destroy(Request $request): RedirectResponse
-    {
+    public function destroy(Request $request): RedirectResponse {
         Auth::logout();
 
         $request->session()->invalidate();

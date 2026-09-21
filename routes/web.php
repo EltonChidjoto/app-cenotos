@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
@@ -14,10 +14,10 @@ Route::get('/', function (): RedirectResponse {
 });
 
 Route::middleware('guest')->group(function (): void {
-    Route::get('/login', [AuthController::class, 'create'])->name('login');
-    Route::post('/login', [AuthController::class, 'store'])
+    Route::get('/login', [AuthController::class, 'index'])->name('login');
+    Route::post('/login', [AuthController::class, 'authenticate'])
         ->middleware('throttle:login')
-        ->name('login.store');
+        ->name('login.authenticate');
 });
 
 Route::post('/logout', [AuthController::class, 'destroy'])
