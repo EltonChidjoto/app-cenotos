@@ -6,9 +6,9 @@
             <div class="relative grid min-h-svh overflow-hidden bg-slate-950 sm:min-h-[calc(100svh-8px)] sm:rounded-[10px] lg:grid-cols-[minmax(0,1fr)_minmax(450px,510px)]">
                 <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
                     <img class="login-background-slide absolute h-[108%] w-[108%] max-w-none" style="animation-delay: -3.84s" src="https://images.pexels.com/photos/35242813/pexels-photo-35242813.jpeg" alt="" decoding="async">
-                    <img class="login-background-slide absolute h-[108%] w-[108%] max-w-none" style="animation-delay: 4.16s" src="https://images.pexels.com/photos/15890099/pexels-photo-15890099.jpeg" alt="" decoding="async">
+                    <img class="login-background-slide absolute h-[108%] w-[108%] max-w-none" style="animation-delay: 4.16s" src="https://images.pexels.com/photos/4173174/pexels-photo-4173174.jpeg" alt="" decoding="async">
                     <img class="login-background-slide absolute h-[108%] w-[108%] max-w-none" style="animation-delay: 12.16s" src="https://images.pexels.com/photos/18431220/pexels-photo-18431220.jpeg" alt="" decoding="async">
-                    <img class="login-background-slide absolute h-[108%] w-[108%] max-w-none" style="animation-delay: 20.16s" src="https://images.pexels.com/photos/13069638/pexels-photo-13069638.jpeg" alt="" decoding="async">
+                    <img class="login-background-slide absolute h-[108%] w-[108%] max-w-none" style="animation-delay: 20.16s" src="https://images.pexels.com/photos/12281147/pexels-photo-12281147.jpeg" alt="" decoding="async">
                     <div class="absolute inset-0 z-10 bg-black/20" />
                 </div>
 

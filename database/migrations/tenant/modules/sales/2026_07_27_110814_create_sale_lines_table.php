@@ -25,6 +25,8 @@ return new class extends Migration
             $table->decimal('tax_percentage', 8, 4)->default(0);
             $table->decimal('tax_amount', 18, 4)->default(0);
             $table->decimal('line_total', 18, 4);
+            $table->foreignId('user_created_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('user_updated_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
             $table->unique(['sale_header_id', 'line_number']);

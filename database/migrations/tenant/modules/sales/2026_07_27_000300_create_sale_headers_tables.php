@@ -31,6 +31,8 @@ return new class extends Migration
             $table->decimal('grand_total', 18, 4)->default(0);
             $table->unsignedBigInteger('created_by_user_id')->nullable();
             $table->text('notes')->nullable();
+            $table->foreignId('user_created_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('user_updated_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
             $table->unique(['document_number']);
